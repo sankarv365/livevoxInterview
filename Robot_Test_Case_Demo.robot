@@ -24,8 +24,8 @@ ASG_Test_002
 *** Keywords ***
 Check Longest Running Instance
     [Arguments]    ${instance_up_time_list}
-    ${longest_running_instance} =    check uptime of ASG running instances     ${instance_up_time_list}
-    Log   Longest Running Instance is: ${longest_running_instance}
+    ${longest_running_instance}    ${run_time} =    check uptime of ASG running instances     ${instance_up_time_list}
+    Log   Longest Running Instance is: ${longest_running_instance} and it's Run time is: ${run_time}
 
 Check Instance State
     ${launch_count}   ${termination_count} =    get instances launched terminated    ${ASGName}

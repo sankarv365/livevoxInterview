@@ -36,15 +36,15 @@ def verify_SecuirtyGroup_ImageID_VPCID(other_info):
 
 
 def check_uptime_of_ASG_running_instances(instance_up_time_list):
-    print(instance_up_time_list)
     longest_running_instance = None
     longest_uptime = None
     for instance_item in instance_up_time_list:
         uptime = instance_up_time_list[instance_item]
+        print(f'Instance: {instance_item} Its up time is : {uptime}')
         if longest_uptime is None or uptime > longest_uptime:
             longest_uptime = uptime
             longest_running_instance = instance_item
-    return longest_running_instance
+    return longest_running_instance, longest_uptime
 
 def get_instance_details(asg_response):
     instances = asg_response['AutoScalingGroups'][0]['Instances']
@@ -56,9 +56,11 @@ def get_instance_details(asg_response):
 
 def precondition_steps(asg_name):
     asg_response=get_asg_describe(asg_name)
+    assert len(asg_response)>1, "No ASG is available"
     desired_capacity = asg_response['AutoScalingGroups'][0]['DesiredCapacity']
     print("Desired Capacity of the ASG is : ", desired_capacity)
     instance_response=get_instance_details(asg_response)
+    assert len(asg_response)>1, "No instance is available"
     running_instances = 0
     az_counts = {}
     other_info = {}
@@ -106,6 +108,7 @@ def calculate_elapsed_time(start_time):
 def get_next_scheduled_action(asg_name):
     asg_client = boto3.client('autoscaling',aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key,region_name='ap-south-1')
     response = asg_client.describe_scheduled_actions(AutoScalingGroupName=asg_name)
+    assert len(response)>1, "No ScheduledUpdateGroupActions is available"
     if 'ScheduledUpdateGroupActions' in response:
         # Sort scheduled actions by time and find the next one to execute
         scheduled_actions = response['ScheduledUpdateGroupActions']
@@ -123,6 +126,7 @@ def get_next_scheduled_action(asg_name):
 def get_instances_launched_terminated(asg_name):
     asg_client = boto3.client('autoscaling',aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key,region_name='ap-south-1')
     response = asg_client.describe_auto_scaling_instances()
+    assert len(response)>1, "No auto_scaling_instances is available"
     instances_launched = 0
     instances_terminated = 0
     for instance in response['AutoScalingInstances']:
